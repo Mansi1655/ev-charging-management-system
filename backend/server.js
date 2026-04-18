@@ -15,6 +15,12 @@ app.use('/api/stations', require('./routes/stations'));
 app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/tickets',  require('./routes/tickets'));
-
+app.use('/api/discoms', require('./routes/discoms'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/vehicles', require('./routes/vehicles'));
+app.use('/api/transformers', require('./routes/transformers'));
+app.use('/api/connectors', require('./routes/connectors'));
+app.use('/api/energymeters', require('./routes/energy_meters'));
+app.use('/api/tariffplans', require('./routes/tariff_plans'));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

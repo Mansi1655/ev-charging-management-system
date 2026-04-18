@@ -1,55 +1,56 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getSessions, endSession } from '../api';
 
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
-  const [kwh, setKwh] = useState({});
+  const [kw, setKw] = useState('');
 
-  const load = () => getSessions().then(r => setSessions(r.data));
-  useEffect(() => { load(); }, []);
+  useEffect(() => { loadSessions(); }, []);
+  const loadSessions = () => getSessions().then(r => setSessions(r.data)).catch(console.error);
 
-  const handleEnd = async (id) => {
-    await endSession(id, kwh[id] || 0);
-    load();
+  const handleEnd = (id) => {
+    if(!kw) return alert('Enter total kWh delivered first!');
+    endSession(id, parseFloat(kw)).then(() => {
+      loadSessions();
+      setKw('');
+    }).catch(console.error);
   };
 
   return (
-    <div>
-      <h2>Charging Sessions</h2>
-      <table style={{ width:'100%', borderCollapse:'collapse' }}>
-        <thead>
-          <tr style={{ background:'#f0f0f0' }}>
-            {['ID','Vehicle','Connector','Start','End','kWh','Action'].map(h => (
-              <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontWeight:600 }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sessions.map(s => (
-            <tr key={s.session_id}>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.session_id}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.vehicle_make}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.connector_type}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{new Date(s.start_time).toLocaleString()}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.end_time ? new Date(s.end_time).toLocaleString() : <span style={{color:'orange'}}>Active</span>}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.total_kwh_delivered ?? '-'}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>
-                {!s.end_time && (
-                  <span style={{ display:'flex', gap:6 }}>
-                    <input type="number" placeholder="kWh" style={{ width:70, padding:4, borderRadius:4, border:'1px solid #ccc' }}
-                      onChange={e => setKwh({ ...kwh, [s.session_id]: e.target.value })} />
-                    <button onClick={() => handleEnd(s.session_id)} style={{ padding:'6px 14px', background:'#e74c3c', color:'#fff', border:'none', borderRadius:6, cursor:'pointer' }}>End</button>
-                  </span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="fade-in">
+      <h1 className="page-title">Live Charging Sessions</h1>
+
+      <div className="grid-cards" style={{ marginBottom: '32px' }}>
+        {sessions.map(s => {
+          const isActive = !s.end_time;
+          return (
+            <div key={s.session_id} className="glass-card" style={{ borderLeft: isActive ? '4px solid var(--accent-warning)' : '4px solid var(--accent-success)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '1.1rem' }}>Session #{s.session_id}</h3>
+                {isActive ? <span className="badge badge-warning">Active</span> : <span className="badge badge-success">Completed</span>}
+              </div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>
+                Vehicle: <strong style={{ color: '#fff' }}>{s.vehicle_make}</strong>
+              </p>
+              <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}>Connector: {s.connector_type}</p>
+              
+              <div style={{ fontSize: '0.85rem', marginBottom: '16px', background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '8px' }}>
+                <div>Start: {new Date(s.start_time).toLocaleString()}</div>
+                {!isActive && <div>End: {new Date(s.end_time).toLocaleString()}</div>}
+                {!isActive && <div style={{ color: 'var(--accent-primary)', marginTop: '4px', fontWeight: 600 }}>Delivered: {s.total_kwh_delivered} kWh</div>}
+              </div>
+
+              {isActive && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="number" step="0.1" className="premium-input" placeholder="kWh..." value={kw} onChange={e => setKw(e.target.value)} />
+                  <button className="premium-btn" onClick={() => handleEnd(s.session_id)} style={{ padding: '8px 16px' }}>End</button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {sessions.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No sessions found.</p>}
     </div>
   );
 }
-
-
-
-

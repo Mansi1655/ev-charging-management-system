@@ -1,55 +1,50 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getStations, addStation } from '../api';
 
 export default function Stations() {
   const [stations, setStations] = useState([]);
-  const [form, setForm] = useState({ station_id:'', operator_name:'', latitude:'', longitude:'', discom_id:'', transformer_id:'' });
+  const [formData, setFormData] = useState({ station_id:'', operator_name:'', latitude:'', longitude:'', discom_id:'', transformer_id:'' });
 
-  const load = () => getStations().then(r => setStations(r.data));
-  useEffect(() => { load(); }, []);
+  useEffect(() => { loadStations(); }, []);
+  const loadStations = () => getStations().then(r => setStations(r.data)).catch(console.error);
 
-  const handleAdd = async () => {
-    await addStation(form);
-    load();
-    setForm({ station_id:'', operator_name:'', latitude:'', longitude:'', discom_id:'', transformer_id:'' });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addStation(formData).then(() => {
+      loadStations();
+      setFormData({ station_id:'', operator_name:'', latitude:'', longitude:'', discom_id:'', transformer_id:'' });
+    }).catch(console.error);
   };
 
   return (
-    <div>
-      <h2>Charging Stations</h2>
-      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:24 }}>
-        {['station_id','operator_name','latitude','longitude','discom_id','transformer_id'].map(k => (
-          <input key={k} placeholder={k} value={form[k]}
-            onChange={e => setForm({ ...form, [k]: e.target.value })}
-            style={{ padding:'8px 12px', borderRadius:6, border:'1px solid #ccc' }}
-          />
-        ))}
-        <button onClick={handleAdd} style={{ padding:'8px 20px', background:'#1abc9c', color:'#fff', border:'none', borderRadius:6, cursor:'pointer' }}>Add Station</button>
+    <div className="fade-in">
+      <h1 className="page-title">Charging Stations</h1>
+
+      <div className="glass-card" style={{ marginBottom: '32px' }}>
+        <h3 style={{ marginBottom: '16px' }}>Add Station</h3>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <input className="premium-input" placeholder="Station ID" type="number" required value={formData.station_id} onChange={e => setFormData({...formData, station_id: e.target.value})} />
+          <input className="premium-input" placeholder="Operator Name" required value={formData.operator_name} onChange={e => setFormData({...formData, operator_name: e.target.value})} />
+          <input className="premium-input" placeholder="Lat" type="number" step="0.000001" required value={formData.latitude} onChange={e => setFormData({...formData, latitude: e.target.value})} />
+          <input className="premium-input" placeholder="Lng" type="number" step="0.000001" required value={formData.longitude} onChange={e => setFormData({...formData, longitude: e.target.value})} />
+          <input className="premium-input" placeholder="Discom ID" type="number" required value={formData.discom_id} onChange={e => setFormData({...formData, discom_id: e.target.value})} />
+          <input className="premium-input" placeholder="Transformer ID" type="number" required value={formData.transformer_id} onChange={e => setFormData({...formData, transformer_id: e.target.value})} />
+          <button className="premium-btn" type="submit" style={{ gridColumn: '1 / -1' }}>Deploy Station</button>
+        </form>
       </div>
-      <table style={{ width:'100%', borderCollapse:'collapse' }}>
-        <thead>
-          <tr style={{ background:'#f0f0f0' }}>
-            {['ID','Operator','Latitude','Longitude','Discom'].map(h => (
-              <th key={h} style={{ padding:'10px 14px', textAlign:'left', fontWeight:600 }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {stations.map(s => (
-            <tr key={s.station_id}>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.station_id}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.operator_name}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.latitude}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.longitude}</td>
-              <td style={{ padding:'10px 14px', borderBottom:'1px solid #eee' }}>{s.discom_name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <div className="grid-cards">
+        {stations.map(s => (
+          <div key={s.station_id} className="glass-card">
+            <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px', marginBottom: '12px' }}>
+              {s.operator_name}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '6px' }}>📍 {s.latitude}, {s.longitude}</p>
+            <p style={{ fontSize: '0.9rem', marginBottom: '6px' }}>🔌 Discom: {s.discom_name}</p>
+            <p style={{ fontSize: '0.9rem' }}>⚡ Transformer: #{s.transformer_id}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
-
-
-
-
