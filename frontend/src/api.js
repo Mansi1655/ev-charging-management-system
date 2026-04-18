@@ -1,0 +1,10 @@
+﻿import axios from 'axios';
+const BASE_URL = 'http://localhost:5000/api';
+export const getStations = ()       => axios.get(BASE_URL + '/stations');
+export const getSessions = ()       => axios.get(BASE_URL + '/sessions');
+export const getPayments = ()       => axios.get(BASE_URL + '/payments');
+export const getTickets  = ()       => axios.get(BASE_URL + '/tickets');
+export const addStation  = (data)   => axios.post(BASE_URL + '/stations', data);
+export const endSession  = (id, kw) => axios.put(BASE_URL + '/sessions/' + id + '/end', { total_kwh_delivered: kw });
+export const closeTicket = (id)     => axios.put(BASE_URL + '/tickets/' + id);
+export const addTicket   = (data)   => axios.post(BASE_URL + '/tickets', data);
